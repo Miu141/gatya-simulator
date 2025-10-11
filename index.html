@@ -241,6 +241,23 @@
         </div>
     </div>
 
+    <!-- グラフ拡大表示用モーダル -->
+    <div id="graphModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-6xl max-h-[90vh] w-full overflow-auto">
+            <div class="flex justify-between items-center p-4 border-b">
+                <h3 id="modalTitle" class="text-xl font-semibold">グラフ拡大表示</h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">
+                    ×
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="relative" style="height: 500px; width: 100%;">
+                    <canvas id="modalChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ガチャ設定（デフォルト値）
         let gachaSettings = {
@@ -462,6 +479,12 @@
         // グラフインスタンスを保存
         let cumulativeChart = null;
         let distributionChart = null;
+        let modalChart = null;
+
+        // 拡大表示用のデータを保存
+        let currentChartData = null;
+        let currentChartType = null;
+        let currentChartTitle = null;
 
         // グラフ描画
         function drawCharts(results) {
@@ -563,6 +586,9 @@
                                 boxWidth: 12
                             }
                         }
+                    },
+                    onClick: function(event, elements) {
+                        openModal('line', cumulativeData, '累積確率の比較');
                     }
                 }
             });
@@ -616,9 +642,164 @@
                         legend: {
                             display: false
                         }
+                    },
+                    onClick: function(event, elements) {
+                        openModal('bar', distributionData, '殿堂出現回数の分布');
                     }
                 }
             });
+        }
+
+        // モーダルを開く関数
+        function openModal(chartType, data, title) {
+            currentChartType = chartType;
+            currentChartData = data;
+            currentChartTitle = title;
+            
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('graphModal').classList.remove('hidden');
+            
+            // モーダル内にグラフを描画
+            drawModalChart();
+        }
+
+        // モーダル内のグラフを描画
+        function drawModalChart() {
+            if (modalChart) {
+                modalChart.destroy();
+            }
+            
+            const modalCtx = document.getElementById('modalChart').getContext('2d');
+            
+            if (currentChartType === 'line') {
+                modalChart = new Chart(modalCtx, {
+                    type: 'line',
+                    data: {
+                        labels: currentChartData.map(d => d.draws),
+                        datasets: [
+                            {
+                                label: '理論値',
+                                data: currentChartData.map(d => d.theoretical),
+                                borderColor: '#8884d8',
+                                backgroundColor: 'rgba(136, 132, 216, 0.1)',
+                                tension: 0.1,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            },
+                            {
+                                label: '実測値',
+                                data: currentChartData.map(d => d.actual),
+                                borderColor: '#82ca9d',
+                                backgroundColor: 'rgba(130, 202, 157, 0.1)',
+                                tension: 0.1,
+                                pointRadius: 4,
+                                pointHoverRadius: 6
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 1000,
+                            easing: 'easeInOutQuart'
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100,
+                                title: {
+                                    display: true,
+                                    text: '確率(%)',
+                                    font: { size: 14 }
+                                },
+                                ticks: {
+                                    font: { size: 12 }
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'ガチャ回数',
+                                    font: { size: 14 }
+                                },
+                                ticks: {
+                                    font: { size: 12 }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    font: { size: 13 },
+                                    boxWidth: 15
+                                }
+                            }
+                        }
+                    }
+                });
+            } else if (currentChartType === 'bar') {
+                modalChart = new Chart(modalCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: currentChartData.map(d => d.range),
+                        datasets: [{
+                            label: '出現回数',
+                            data: currentChartData.map(d => d.count),
+                            backgroundColor: '#8884d8',
+                            borderColor: '#8884d8',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        animation: {
+                            duration: 1000,
+                            easing: 'easeInOutQuart'
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: '出現回数',
+                                    font: { size: 14 }
+                                },
+                                ticks: {
+                                    font: { size: 12 }
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'ガチャ回数範囲',
+                                    font: { size: 14 }
+                                },
+                                ticks: {
+                                    font: { size: 12 },
+                                    maxRotation: 45
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // モーダルを閉じる関数
+        function closeModal() {
+            document.getElementById('graphModal').classList.add('hidden');
+            if (modalChart) {
+                modalChart.destroy();
+                modalChart = null;
+            }
         }
 
         // 設定を更新する関数
@@ -673,6 +854,21 @@
         document.getElementById('runSimulation').addEventListener('click', runSimulation);
         document.getElementById('applySettings').addEventListener('click', updateSettings);
         document.getElementById('resetSettings').addEventListener('click', resetToDefault);
+        
+        // モーダル関連のイベントリスナー
+        document.getElementById('closeModal').addEventListener('click', closeModal);
+        document.getElementById('graphModal').addEventListener('click', function(event) {
+            if (event.target === this) {
+                closeModal();
+            }
+        });
+        
+        // ESCキーでモーダルを閉じる
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
 
         // 初期表示を設定
         updateDisplay();
