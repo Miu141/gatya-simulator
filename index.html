@@ -37,6 +37,13 @@
             max-height: 100vh;
             overflow-y: auto;
         }
+        
+        /* ボタンの揺れ防止 */
+        #runSimulation {
+            min-width: 200px;
+            text-align: center;
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -135,7 +142,7 @@
                     <option value="5000">5,000回</option>
                     <option value="10000">10,000回</option>
                 </select>
-                <button id="runSimulation" class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 text-lg font-semibold transition-colors">
+                <button id="runSimulation" class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 text-lg font-semibold transition-colors min-w-[200px] text-center">
                     シミュレーション開始
                 </button>
             </div>
@@ -306,7 +313,7 @@
             const simulationCount = parseInt(document.getElementById('simulationCount').value);
             
             button.disabled = true;
-            button.textContent = '実行中...';
+            button.textContent = '実行中... 0%';
             button.classList.add('loading');
             
             // 結果エリアを非表示
@@ -315,6 +322,7 @@
             // 段階的に結果を更新するための遅延
             await new Promise(resolve => setTimeout(resolve, 100));
             
+            // 配列を初期化（前回のデータをクリア）
             let totalDraws = 0;
             let totalLegendary = 0;
             let totalGold = 0;
@@ -327,7 +335,7 @@
             const batchSize = simulationCount >= 2000 ? 100 : simulationCount;
             const totalBatches = Math.ceil(simulationCount / batchSize);
 
-            // プログレス表示用の関数
+            // プログレス表示用の関数（固定幅で揺れを防ぐ）
             function updateProgress(currentBatch, totalBatches) {
                 const progress = Math.round((currentBatch / totalBatches) * 100);
                 button.textContent = `実行中... ${progress}%`;
@@ -353,12 +361,14 @@
                     }
                 }
                 
-                // プログレスを更新
-                updateProgress(batch + 1, totalBatches);
+                // プログレスを更新（定期的にのみ）
+                if (batch % Math.max(1, Math.floor(totalBatches / 20)) === 0 || batch === totalBatches - 1) {
+                    updateProgress(batch + 1, totalBatches);
+                }
                 
                 // バッチ間で少し待機（UIの応答性を保つため）
                 if (batch < totalBatches - 1) {
-                    await new Promise(resolve => setTimeout(resolve, 10));
+                    await new Promise(resolve => setTimeout(resolve, 5));
                 }
             }
 
@@ -449,8 +459,20 @@
             document.getElementById('results').classList.remove('hidden');
         }
 
+        // グラフインスタンスを保存
+        let cumulativeChart = null;
+        let distributionChart = null;
+
         // グラフ描画
         function drawCharts(results) {
+            // 既存のグラフを破棄
+            if (cumulativeChart) {
+                cumulativeChart.destroy();
+            }
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+
             // 累積確率データ
             const cumulativeData = [];
             for (let i = 50; i <= 600; i += 50) {
@@ -477,7 +499,7 @@
 
             // 累積確率グラフ
             const cumulativeCtx = document.getElementById('cumulativeChart').getContext('2d');
-            new Chart(cumulativeCtx, {
+            cumulativeChart = new Chart(cumulativeCtx, {
                 type: 'line',
                 data: {
                     labels: cumulativeData.map(d => d.draws),
@@ -547,7 +569,7 @@
 
             // 分布グラフ
             const distributionCtx = document.getElementById('distributionChart').getContext('2d');
-            new Chart(distributionCtx, {
+            distributionChart = new Chart(distributionCtx, {
                 type: 'bar',
                 data: {
                     labels: distributionData.map(d => d.range),
