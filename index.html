@@ -43,29 +43,82 @@
     <div class="container mx-auto px-4 py-4 max-w-6xl">
         <h1 class="text-3xl font-bold text-center mb-4 text-gray-800">ガチャシミュレーター</h1>
         
-        <!-- 設定表示 -->
+        <!-- 設定変更 -->
         <div class="bg-white p-4 rounded-lg shadow-lg mb-4">
             <h2 class="text-xl font-semibold mb-3">ガチャ設定</h2>
+            
+            <!-- 確率設定 -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold mb-3">確率設定 (%)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-yellow-800">殿堂</label>
+                        <input type="number" id="legendaryRate" value="0.2" step="0.1" min="0" max="100" 
+                               class="w-full px-3 py-2 border border-yellow-300 rounded-lg bg-yellow-50 text-yellow-800 font-semibold">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-orange-800">金枠</label>
+                        <input type="number" id="goldRate" value="1.2" step="0.1" min="0" max="100" 
+                               class="w-full px-3 py-2 border border-orange-300 rounded-lg bg-orange-50 text-orange-800 font-semibold">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-red-800">オレンジ枠</label>
+                        <input type="number" id="orangeRate" value="30.0" step="0.1" min="0" max="100" 
+                               class="w-full px-3 py-2 border border-red-300 rounded-lg bg-red-50 text-red-800 font-semibold">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-purple-800">紫枠</label>
+                        <input type="number" id="purpleRate" value="68.6" step="0.1" min="0" max="100" 
+                               class="w-full px-3 py-2 border border-purple-300 rounded-lg bg-purple-50 text-purple-800 font-semibold">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 天井設定 -->
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold mb-3">天井設定</h3>
+                <div class="flex items-center gap-4">
+                    <label class="text-sm font-medium text-blue-800">天井回数:</label>
+                    <input type="number" id="pityCount" value="600" step="50" min="100" max="2000" 
+                           class="px-3 py-2 border border-blue-300 rounded-lg bg-blue-50 text-blue-800 font-semibold">
+                    <span class="text-sm text-gray-600">回</span>
+                </div>
+            </div>
+
+            <!-- 設定ボタン -->
+            <div class="flex gap-2">
+                <button id="applySettings" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold">
+                    設定を適用
+                </button>
+                <button id="resetSettings" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-semibold">
+                    デフォルトに戻す
+                </button>
+            </div>
+        </div>
+
+        <!-- 設定表示 -->
+        <div class="bg-white p-4 rounded-lg shadow-lg mb-4">
+            <h2 class="text-xl font-semibold mb-3">現在の設定</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="text-center p-4 bg-yellow-100 rounded-lg border-2 border-yellow-300">
                     <div class="font-bold text-yellow-800 text-lg">殿堂</div>
-                    <div class="text-2xl font-bold text-yellow-600">0.2%</div>
+                    <div class="text-2xl font-bold text-yellow-600" id="displayLegendary">0.2%</div>
                 </div>
                 <div class="text-center p-4 bg-orange-100 rounded-lg border-2 border-orange-300">
                     <div class="font-bold text-orange-800 text-lg">金枠</div>
-                    <div class="text-2xl font-bold text-orange-600">1.2%</div>
+                    <div class="text-2xl font-bold text-orange-600" id="displayGold">1.2%</div>
                 </div>
                 <div class="text-center p-4 bg-red-100 rounded-lg border-2 border-red-300">
                     <div class="font-bold text-red-800 text-lg">オレンジ枠</div>
-                    <div class="text-2xl font-bold text-red-600">30.0%</div>
+                    <div class="text-2xl font-bold text-red-600" id="displayOrange">30.0%</div>
                 </div>
                 <div class="text-center p-4 bg-purple-100 rounded-lg border-2 border-purple-300">
                     <div class="font-bold text-purple-800 text-lg">紫枠</div>
-                    <div class="text-2xl font-bold text-purple-600">68.6%</div>
+                    <div class="text-2xl font-bold text-purple-600" id="displayPurple">68.6%</div>
                 </div>
             </div>
             <div class="text-center mt-4 p-3 bg-blue-100 rounded-lg border-2 border-blue-300">
-                <span class="font-bold text-blue-800 text-lg">天井システム: 600回</span>
+                <span class="font-bold text-blue-800 text-lg">天井システム: <span id="displayPity">600</span>回</span>
             </div>
         </div>
 
@@ -80,6 +133,7 @@
                     <option value="1000" selected>1,000回</option>
                     <option value="2000">2,000回</option>
                     <option value="5000">5,000回</option>
+                    <option value="10000">10,000回</option>
                 </select>
                 <button id="runSimulation" class="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 text-lg font-semibold transition-colors">
                     シミュレーション開始
@@ -181,14 +235,17 @@
     </div>
 
     <script>
-        // ガチャ設定
-        const gachaSettings = {
+        // ガチャ設定（デフォルト値）
+        let gachaSettings = {
             legendary: { name: '殿堂', rate: 0.002, color: '#FFD700' }, // 0.2%
             gold: { name: '金枠', rate: 0.012, color: '#FFA500' }, // 1.2%
             orange: { name: 'オレンジ枠', rate: 0.3, color: '#FF4500' }, // 30%
             purple: { name: '紫枠', rate: 0.686, color: '#9932CC' }, // 68.6%
             pity: 600 // 天井
         };
+
+        // デフォルト設定を保存
+        const defaultSettings = JSON.parse(JSON.stringify(gachaSettings));
 
         // 単発ガチャシミュレーション
         function drawSingle() {
@@ -266,23 +323,47 @@
             let legendaryDistribution = [];
             let drawsToFirstLegendary = [];
 
-            // シミュレーション実行
-            for (let i = 0; i < simulationCount; i++) {
-                const result = drawWithPity();
-                totalDraws += result.draws;
-                totalLegendary += result.legendary;
-                totalGold += result.gold;
-                totalOrange += result.orange;
-                totalPurple += result.purple;
+            // バッチサイズを設定（大量のシミュレーションの場合は分割実行）
+            const batchSize = simulationCount >= 2000 ? 100 : simulationCount;
+            const totalBatches = Math.ceil(simulationCount / batchSize);
+
+            // プログレス表示用の関数
+            function updateProgress(currentBatch, totalBatches) {
+                const progress = Math.round((currentBatch / totalBatches) * 100);
+                button.textContent = `実行中... ${progress}%`;
+            }
+
+            // バッチ処理でシミュレーション実行
+            for (let batch = 0; batch < totalBatches; batch++) {
+                const startIndex = batch * batchSize;
+                const endIndex = Math.min(startIndex + batchSize, simulationCount);
                 
-                if (result.legendaryDraws.length > 0) {
-                    drawsToFirstLegendary.push(result.legendaryDraws[0]);
-                    legendaryDistribution.push(...result.legendaryDraws);
+                // 現在のバッチを実行
+                for (let i = startIndex; i < endIndex; i++) {
+                    const result = drawWithPity();
+                    totalDraws += result.draws;
+                    totalLegendary += result.legendary;
+                    totalGold += result.gold;
+                    totalOrange += result.orange;
+                    totalPurple += result.purple;
+                    
+                    if (result.legendaryDraws.length > 0) {
+                        drawsToFirstLegendary.push(result.legendaryDraws[0]);
+                        legendaryDistribution.push(...result.legendaryDraws);
+                    }
+                }
+                
+                // プログレスを更新
+                updateProgress(batch + 1, totalBatches);
+                
+                // バッチ間で少し待機（UIの応答性を保つため）
+                if (batch < totalBatches - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 10));
                 }
             }
 
-            // 理論値計算
-            const theoreticalExpected = 1 / gachaSettings.legendary.rate; // 500回
+            // 理論値計算（動的に設定値を使用）
+            const theoreticalExpected = 1 / gachaSettings.legendary.rate;
             const actualExpected = drawsToFirstLegendary.length > 0 ? 
                 drawsToFirstLegendary.reduce((a, b) => a + b, 0) / drawsToFirstLegendary.length : 0;
 
@@ -292,10 +373,30 @@
                 totalDraws,
                 averageDraws: totalDraws / simulationCount,
                 rarity: [
-                    { name: '殿堂', theoretical: 0.2, actual: (totalLegendary / totalDraws) * 100, count: totalLegendary },
-                    { name: '金枠', theoretical: 1.2, actual: (totalGold / totalDraws) * 100, count: totalGold },
-                    { name: 'オレンジ枠', theoretical: 30.0, actual: (totalOrange / totalDraws) * 100, count: totalOrange },
-                    { name: '紫枠', theoretical: 68.6, actual: (totalPurple / totalDraws) * 100, count: totalPurple }
+                    { 
+                        name: '殿堂', 
+                        theoretical: gachaSettings.legendary.rate * 100, 
+                        actual: (totalLegendary / totalDraws) * 100, 
+                        count: totalLegendary 
+                    },
+                    { 
+                        name: '金枠', 
+                        theoretical: gachaSettings.gold.rate * 100, 
+                        actual: (totalGold / totalDraws) * 100, 
+                        count: totalGold 
+                    },
+                    { 
+                        name: 'オレンジ枠', 
+                        theoretical: gachaSettings.orange.rate * 100, 
+                        actual: (totalOrange / totalDraws) * 100, 
+                        count: totalOrange 
+                    },
+                    { 
+                        name: '紫枠', 
+                        theoretical: gachaSettings.purple.rate * 100, 
+                        actual: (totalPurple / totalDraws) * 100, 
+                        count: totalPurple 
+                    }
                 ],
                 expectedValues: {
                     theoretical: theoreticalExpected,
@@ -498,8 +599,61 @@
             });
         }
 
+        // 設定を更新する関数
+        function updateSettings() {
+            const legendaryRate = parseFloat(document.getElementById('legendaryRate').value) / 100;
+            const goldRate = parseFloat(document.getElementById('goldRate').value) / 100;
+            const orangeRate = parseFloat(document.getElementById('orangeRate').value) / 100;
+            const purpleRate = parseFloat(document.getElementById('purpleRate').value) / 100;
+            const pityCount = parseInt(document.getElementById('pityCount').value);
+
+            // 確率の合計をチェック
+            const totalRate = legendaryRate + goldRate + orangeRate + purpleRate;
+            if (Math.abs(totalRate - 1.0) > 0.001) {
+                alert(`確率の合計が100%になっていません。現在の合計: ${(totalRate * 100).toFixed(1)}%\n紫枠の確率を自動調整します。`);
+                const adjustedPurpleRate = 1.0 - legendaryRate - goldRate - orangeRate;
+                document.getElementById('purpleRate').value = (adjustedPurpleRate * 100).toFixed(1);
+            }
+
+            // 設定を更新
+            gachaSettings.legendary.rate = legendaryRate;
+            gachaSettings.gold.rate = goldRate;
+            gachaSettings.orange.rate = orangeRate;
+            gachaSettings.purple.rate = parseFloat(document.getElementById('purpleRate').value) / 100;
+            gachaSettings.pity = pityCount;
+
+            // 表示を更新
+            updateDisplay();
+        }
+
+        // 表示を更新する関数
+        function updateDisplay() {
+            document.getElementById('displayLegendary').textContent = (gachaSettings.legendary.rate * 100).toFixed(1) + '%';
+            document.getElementById('displayGold').textContent = (gachaSettings.gold.rate * 100).toFixed(1) + '%';
+            document.getElementById('displayOrange').textContent = (gachaSettings.orange.rate * 100).toFixed(1) + '%';
+            document.getElementById('displayPurple').textContent = (gachaSettings.purple.rate * 100).toFixed(1) + '%';
+            document.getElementById('displayPity').textContent = gachaSettings.pity;
+        }
+
+        // デフォルト設定に戻す関数
+        function resetToDefault() {
+            document.getElementById('legendaryRate').value = defaultSettings.legendary.rate * 100;
+            document.getElementById('goldRate').value = defaultSettings.gold.rate * 100;
+            document.getElementById('orangeRate').value = defaultSettings.orange.rate * 100;
+            document.getElementById('purpleRate').value = defaultSettings.purple.rate * 100;
+            document.getElementById('pityCount').value = defaultSettings.pity;
+            
+            gachaSettings = JSON.parse(JSON.stringify(defaultSettings));
+            updateDisplay();
+        }
+
         // イベントリスナー
         document.getElementById('runSimulation').addEventListener('click', runSimulation);
+        document.getElementById('applySettings').addEventListener('click', updateSettings);
+        document.getElementById('resetSettings').addEventListener('click', resetToDefault);
+
+        // 初期表示を設定
+        updateDisplay();
     </script>
 </body>
 </html>
