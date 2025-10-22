@@ -44,6 +44,63 @@
             text-align: center;
             white-space: nowrap;
         }
+        
+        /* 天井システムトグルスイッチのスタイル */
+        .pity-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .pity-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .pity-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .pity-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .pity-slider {
+            background-color: #4CAF50;
+        }
+        
+        input:checked + .pity-slider:before {
+            transform: translateX(26px);
+        }
+        
+        /* 天井システム状態表示の色 */
+        .pity-status-enabled {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        
+        .pity-status-disabled {
+            color: #f44336;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -84,11 +141,23 @@
             <!-- 天井設定 -->
             <div class="mb-4">
                 <h3 class="text-lg font-semibold mb-3">天井設定</h3>
-                <div class="flex items-center gap-4">
-                    <label class="text-sm font-medium text-blue-800">天井回数:</label>
-                    <input type="number" id="pityCount" value="600" step="50" min="100" max="2000" 
-                           class="px-3 py-2 border border-blue-300 rounded-lg bg-blue-50 text-blue-800 font-semibold">
-                    <span class="text-sm text-gray-600">回</span>
+                <div class="space-y-3">
+                    <!-- 天井システムのオン/オフ切り替え -->
+                    <div class="flex items-center gap-4">
+                        <label class="text-sm font-medium text-blue-800">天井システム:</label>
+                        <label class="pity-toggle">
+                            <input type="checkbox" id="pityEnabled" checked>
+                            <span class="pity-slider"></span>
+                        </label>
+                        <span class="ml-3 text-sm font-medium" id="pityStatus">有効</span>
+                    </div>
+                    <!-- 天井回数設定（天井システムが有効な時のみ表示） -->
+                    <div id="pityCountContainer" class="flex items-center gap-4">
+                        <label class="text-sm font-medium text-blue-800">天井回数:</label>
+                        <input type="number" id="pityCount" value="600" step="50" min="100" max="2000" 
+                               class="px-3 py-2 border border-blue-300 rounded-lg bg-blue-50 text-blue-800 font-semibold">
+                        <span class="text-sm text-gray-600">回</span>
+                    </div>
                 </div>
             </div>
 
@@ -125,7 +194,7 @@
                 </div>
             </div>
             <div class="text-center mt-4 p-3 bg-blue-100 rounded-lg border-2 border-blue-300">
-                <span class="font-bold text-blue-800 text-lg">天井システム: <span id="displayPity">600</span>回</span>
+                <span class="font-bold text-blue-800 text-lg">天井システム: <span id="displayPityStatus" class="pity-status-enabled">有効</span> <span id="displayPityCount">(600回)</span></span>
             </div>
         </div>
 
@@ -265,7 +334,8 @@
             gold: { name: '金枠', rate: 0.012, color: '#FFA500' }, // 1.2%
             orange: { name: 'オレンジ枠', rate: 0.3, color: '#FF4500' }, // 30%
             purple: { name: '紫枠', rate: 0.686, color: '#9932CC' }, // 68.6%
-            pity: 600 // 天井
+            pity: 600, // 天井
+            pityEnabled: true // 天井システムの有効/無効
         };
 
         // デフォルト設定を保存
@@ -294,7 +364,8 @@
                 draws++;
                 pityCounter++;
                 
-                if (pityCounter >= gachaSettings.pity) {
+                // 天井システムが有効で、天井に到達した場合
+                if (gachaSettings.pityEnabled && pityCounter >= gachaSettings.pity) {
                     // 天井到達
                     legendary++;
                     legendaryDraws.push(draws);
@@ -583,7 +654,20 @@
                             position: 'top',
                             labels: {
                                 font: { size: 11 },
-                                boxWidth: 12
+                                boxWidth: 12,
+                                usePointStyle: true,
+                                pointStyle: 'line'
+                            },
+                            onClick: function(e, legendItem, legend) {
+                                const index = legendItem.datasetIndex;
+                                const ci = legend.chart;
+                                if (ci.isDatasetVisible(index)) {
+                                    ci.hide(index);
+                                    legendItem.hidden = true;
+                                } else {
+                                    ci.show(index);
+                                    legendItem.hidden = false;
+                                }
                             }
                         }
                     },
@@ -733,7 +817,20 @@
                                 position: 'top',
                                 labels: {
                                     font: { size: 13 },
-                                    boxWidth: 15
+                                    boxWidth: 15,
+                                    usePointStyle: true,
+                                    pointStyle: 'line'
+                                },
+                                onClick: function(e, legendItem, legend) {
+                                    const index = legendItem.datasetIndex;
+                                    const ci = legend.chart;
+                                    if (ci.isDatasetVisible(index)) {
+                                        ci.hide(index);
+                                        legendItem.hidden = true;
+                                    } else {
+                                        ci.show(index);
+                                        legendItem.hidden = false;
+                                    }
                                 }
                             }
                         }
@@ -809,6 +906,7 @@
             const orangeRate = parseFloat(document.getElementById('orangeRate').value) / 100;
             const purpleRate = parseFloat(document.getElementById('purpleRate').value) / 100;
             const pityCount = parseInt(document.getElementById('pityCount').value);
+            const pityEnabled = document.getElementById('pityEnabled').checked;
 
             // 確率の合計をチェック
             const totalRate = legendaryRate + goldRate + orangeRate + purpleRate;
@@ -824,6 +922,7 @@
             gachaSettings.orange.rate = orangeRate;
             gachaSettings.purple.rate = parseFloat(document.getElementById('purpleRate').value) / 100;
             gachaSettings.pity = pityCount;
+            gachaSettings.pityEnabled = pityEnabled;
 
             // 表示を更新
             updateDisplay();
@@ -835,7 +934,21 @@
             document.getElementById('displayGold').textContent = (gachaSettings.gold.rate * 100).toFixed(1) + '%';
             document.getElementById('displayOrange').textContent = (gachaSettings.orange.rate * 100).toFixed(1) + '%';
             document.getElementById('displayPurple').textContent = (gachaSettings.purple.rate * 100).toFixed(1) + '%';
-            document.getElementById('displayPity').textContent = gachaSettings.pity;
+            
+            // 天井システムの状態を更新
+            const pityStatus = gachaSettings.pityEnabled ? '有効' : '無効';
+            const pityCount = gachaSettings.pityEnabled ? `(${gachaSettings.pity}回)` : '';
+            const displayPityStatus = document.getElementById('displayPityStatus');
+            
+            displayPityStatus.textContent = pityStatus;
+            document.getElementById('displayPityCount').textContent = pityCount;
+            
+            // 色のクラスを適用
+            if (gachaSettings.pityEnabled) {
+                displayPityStatus.className = 'pity-status-enabled';
+            } else {
+                displayPityStatus.className = 'pity-status-disabled';
+            }
         }
 
         // デフォルト設定に戻す関数
@@ -845,15 +958,34 @@
             document.getElementById('orangeRate').value = defaultSettings.orange.rate * 100;
             document.getElementById('purpleRate').value = defaultSettings.purple.rate * 100;
             document.getElementById('pityCount').value = defaultSettings.pity;
+            document.getElementById('pityEnabled').checked = defaultSettings.pityEnabled;
             
             gachaSettings = JSON.parse(JSON.stringify(defaultSettings));
             updateDisplay();
+        }
+
+        // 天井システムのオン/オフ切り替え制御
+        function togglePitySystem() {
+            const pityEnabled = document.getElementById('pityEnabled').checked;
+            const pityCountContainer = document.getElementById('pityCountContainer');
+            const pityStatus = document.getElementById('pityStatus');
+            
+            if (pityEnabled) {
+                pityCountContainer.style.display = 'flex';
+                pityStatus.textContent = '有効';
+                pityStatus.className = 'ml-3 text-sm font-medium pity-status-enabled';
+            } else {
+                pityCountContainer.style.display = 'none';
+                pityStatus.textContent = '無効';
+                pityStatus.className = 'ml-3 text-sm font-medium pity-status-disabled';
+            }
         }
 
         // イベントリスナー
         document.getElementById('runSimulation').addEventListener('click', runSimulation);
         document.getElementById('applySettings').addEventListener('click', updateSettings);
         document.getElementById('resetSettings').addEventListener('click', resetToDefault);
+        document.getElementById('pityEnabled').addEventListener('change', togglePitySystem);
         
         // モーダル関連のイベントリスナー
         document.getElementById('closeModal').addEventListener('click', closeModal);
@@ -872,6 +1004,7 @@
 
         // 初期表示を設定
         updateDisplay();
+        togglePitySystem(); // 天井システムの初期状態を設定
     </script>
 </body>
 </html>
